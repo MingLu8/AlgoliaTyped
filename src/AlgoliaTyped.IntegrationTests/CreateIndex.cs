@@ -5,7 +5,18 @@ using FluentAssertions;
 
 namespace AlgoliaTypedIntegrationTests
 {
-    public record Customer(string firstName, string lastName);
+    public class Customer
+    {
+        public string ObjectID { get; set; } = Guid.NewGuid().ToString("D");
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+
+        public Customer(string firstName, string lastName)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+        }
+    }
 
     public class CreateIndex : IDisposable
     {
@@ -25,7 +36,7 @@ namespace AlgoliaTypedIntegrationTests
             _index = new CustomerIndex(_searchClient);
             _index.IndexName.Should().Be("my_customer");
 
-            _index.Create();
+            _index.ConfigureIfNotExists();
 
             var resultingIndex = _searchClient.InitIndex(_index.IndexName);
             resultingIndex.GetSettings().SearchableAttributes.Should().BeEquivalentTo("firstName", "lastName");
@@ -40,8 +51,16 @@ namespace AlgoliaTypedIntegrationTests
     public class CustomerIndex : TypedIndex<Customer>
     {
         public override string IndexName => "my_customer";
-        public CustomerIndex(ISearchClient searchClient) : base(searchClient, indexSettings => { indexSettings.SetAllFieldsSearchable<Customer>(); })
+     
+        public CustomerIndex(ISearchClient searchClient) : base(searchClient)
         {
         }
+
+        public override IndexSettings ConfigureIndexSettings(IIndexSettingsConfigurator<Customer> indexSettingsConfigurator)
+        {
+            var settings = indexSettingsConfigurator.SetAllFieldsSearchable().GetIndexSettings();
+            settings.AttributesForFaceting = new List<string> { "searchable(lastName)", "searchable(firstName)" };
+            return settings;
+        }      
     }
 }
