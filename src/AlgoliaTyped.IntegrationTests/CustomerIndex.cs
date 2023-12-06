@@ -15,7 +15,6 @@ namespace AlgoliaTyped.IntegrationTests
             var settings = indexSettingsConfigurator
                 .SetAllAttributesSearchable()
                 .SetAllAttributesFaceted(FacetType.Searchable)
-                .RemoveFacetedAttributes(a => a.FirstName)
                 .Configure();
             return settings;
         }

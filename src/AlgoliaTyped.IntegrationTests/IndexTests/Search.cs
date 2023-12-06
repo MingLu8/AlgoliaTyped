@@ -7,36 +7,34 @@ using Xunit.Extensions.AssemblyFixture;
 
 namespace AlgoliaTyped.IntegrationTests.IndexTests
 {
-    public class SaveObjects : IAssemblyFixture<AlgoliaFixture>, IDisposable
+    public class Search : IAssemblyFixture<AlgoliaFixture>, IDisposable
     {
         private readonly SearchClient _searchClient;
         private readonly AlgoliaFixture _fixture;
         private CustomerIndex? _index;
 
-        public SaveObjects(AlgoliaFixture fixture)
+        public Search(AlgoliaFixture fixture)
         {
             _fixture = fixture;
             _searchClient = _fixture.SearchClient;
         }
 
         [Fact]
-        public void saves_all_objects()
+        public void returns_search_response()
         {
             _index = new CustomerIndex(_searchClient, GetType().Name);
             _index.Configure();
             var customers = new List<Customer>
             {
-                new Customer( "a", "b", 2),
-                new Customer( "a2", "b2", 3),
-                new Customer( "a3", "b3", 4),
+                new Customer( "a", "b", 12),
+                new Customer( "a2", "b2", 22),
+                new Customer( "a3", "b3", 32),
             };
 
             _index.SaveObjects(customers, waitForCompletion: true);
 
-
-            var resultingIndex = _searchClient.InitIndex(_index.IndexName);
-            var response = resultingIndex.Search<Customer>(new Algolia.Search.Models.Search.Query("a"));
-            response.Hits.Should().HaveCount(3);
+            var response = _index.Search(desc=> desc.Filters(a=>a.FirstName == "a").GetQuery());
+            response.Hits.Should().HaveCount(1);
         }
 
         public void Dispose()

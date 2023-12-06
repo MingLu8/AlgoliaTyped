@@ -1,6 +1,7 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Http;
 using Algolia.Search.Models.Common;
+using Algolia.Search.Models.Search;
 using Algolia.Search.Models.Settings;
 using System.Runtime.InteropServices;
 
@@ -46,5 +47,10 @@ namespace AlgoliaTyped
         {
             InternalSearchIndex.Delete().Wait();           
         }
+
+        public virtual SearchResponse<T> Search(Query query, RequestOptions? requestOptions = null) => InternalSearchIndex.Search<T>(query, requestOptions);
+        public virtual SearchResponse<T> Search(IQueryDescriptor<T> descriptor, RequestOptions? requestOptions = null) => Search(descriptor.GetQuery(), requestOptions);
+        public virtual SearchResponse<T> Search(Func<IQueryDescriptor<T>, Query> func, RequestOptions? requestOptions = null) => Search(func(new QueryDescriptor<T>()), requestOptions);
+
     }
 }
