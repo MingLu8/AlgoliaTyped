@@ -1,28 +1,29 @@
 using Algolia.Search.Clients;
 using Algolia.Search.Models.Settings;
 using AlgoliaTyped;
+using AlgoliaTypedIntegrationTests;
 using FluentAssertions;
+using Xunit.Extensions.AssemblyFixture;
 
-namespace AlgoliaTypedIntegrationTests
+namespace AlgoliaTyped.IntegrationTests.IndexTests
 {
-
-    public class SaveObjects : IDisposable
+    public class SaveObjects : IAssemblyFixture<AlgoliaFixture>, IDisposable
     {
         private readonly SearchClient _searchClient;
+        private readonly AlgoliaFixture _fixture;
         private CustomerIndex? _index;
 
-        public SaveObjects()
+        public SaveObjects(AlgoliaFixture fixture)
         {
-            var applicationId = "FQYQ8IBGN5";
-            var apiKey = "7a36900fc5bbf76a0857484917812787";
-            _searchClient = new SearchClient(applicationId, apiKey);
+            _fixture = fixture;
+            _searchClient = _fixture.SearchClient;
         }
 
         [Fact]
         public void saves_all_objects()
         {
-            _index = new CustomerIndex(_searchClient);
-            _index.ConfigureIfNotExists();
+            _index = new CustomerIndex(_searchClient, GetType().Name);
+            _index.Configure();
             var customers = new List<Customer>
             {
                 new Customer( "a", "b"),

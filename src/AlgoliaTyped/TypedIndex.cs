@@ -8,15 +8,16 @@ namespace AlgoliaTyped
 {
     public class TypedIndex<T> where T : class
     {
-        protected readonly SearchIndex InternalSearchIndex;
+        public readonly SearchIndex InternalSearchIndex;
         private readonly ISearchClient _searchClient;
 
-        public virtual string IndexName { get; } = typeof(T).Name;
+        public string IndexName { get; private set; }
 
         public virtual IndexSettings ConfigureIndexSettings(IIndexSettingsConfigurator<T> indexSettingsConfigurator) { return new IndexSettings(); }
 
-        public TypedIndex(ISearchClient searchClient)
+        public TypedIndex(ISearchClient searchClient, string? indexName = null)
         {
+            IndexName = indexName ?? typeof(T).Name;
             InternalSearchIndex = searchClient.InitIndex(IndexName);
             _searchClient = searchClient;
         }
@@ -25,23 +26,12 @@ namespace AlgoliaTyped
         /// Setting index with index settings defined by the ConfigureIndexSettings method.
         /// If the index already exists in algolia, then the index setting is not changed.
         /// </summary>
-        public virtual void ConfigureIfNotExists()
+        public virtual void Configure(bool skipIfExists = true)
         {
-            if (InternalSearchIndex.Exists()) return;
+            if (skipIfExists && InternalSearchIndex.Exists()) return;
 
-            var indexSettings = ConfigureIndexSettings(new IndexSettingsConfigurator<T>(new IndexSettings()));
+            var indexSettings = ConfigureIndexSettings(new IndexSettingsConfigurator<T>());
             InternalSearchIndex.SetSettings(indexSettings).Wait();
-        }
-
-        /// <summary>
-        /// Forwards call to index.SetSettings(settings, requestOptions, forwardToReplicas).Wait();
-        /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="requestOptions"></param>
-        /// <param name="forwardToReplicas"></param>
-        public virtual void Configure(IndexSettings settings, RequestOptions requestOptions = null, bool forwardToReplicas = false)
-        {
-            InternalSearchIndex.SetSettings(settings, requestOptions, forwardToReplicas).Wait();
         }
 
         public virtual BatchIndexingResponse SaveObjects(IEnumerable<T> documents, RequestOptions? requestOptions = null, bool waitForCompletion = false)
@@ -54,7 +44,7 @@ namespace AlgoliaTyped
 
         public virtual void Delete()
         {
-            InternalSearchIndex.Delete();
+            InternalSearchIndex.Delete().Wait();           
         }
     }
 }
