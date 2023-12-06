@@ -58,8 +58,11 @@ namespace AlgoliaTypedIntegrationTests
 
         public override IndexSettings ConfigureIndexSettings(IIndexSettingsConfigurator<Customer> indexSettingsConfigurator)
         {
-            var settings = indexSettingsConfigurator.SetAllFieldsSearchable().GetIndexSettings();
-            settings.AttributesForFaceting = new List<string> { "searchable(lastName)", "searchable(firstName)" };
+            var settings = indexSettingsConfigurator
+                .SetAllAttributesSearchable()
+                .SetAllAttributesFaceted(FacetType.Searchable)
+                .RemoveFacetedAttributes(a=>a.FirstName)
+                .Configure();
             return settings;
         }      
     }
